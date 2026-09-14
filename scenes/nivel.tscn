@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://hf64tdlvhw8y"]
+
+[ext_resource type="PackedScene" uid="uid://d15syogyifxyw" path="res://scenes/player.tscn" id="2_2p2iw"]
+[ext_resource type="Material" uid="uid://onb4wds4ip67" path="res://assets/materials/meterial_piso.tres" id="2_ixlnu"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_2bok1"]
+
+[node name="Nivel" type="Node3D" unique_id=969806158]
+
+[node name="Player" parent="." unique_id=267013903 instance=ExtResource("2_2p2iw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.0070066, 2)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1163069987]
+transform = Transform3D(1, 0, 0, 0, 0.46723664, 0.8841323, 0, -0.8841323, 0.46723664, 0, 2, 3.2848163)
+light_energy = 7.341
+light_indirect_energy = 2.561
+
+[node name="Piso" type="Node3D" parent="." unique_id=1201317209]
+
+[node name="CSGCombiner3D" type="CSGCombiner3D" parent="Piso" unique_id=1996183964]
+use_collision = true
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Piso/CSGCombiner3D" unique_id=151053052]
+size = Vector3(82.255, 0.28, 124.94)
+material = ExtResource("2_ixlnu")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1747187710]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4898732, 0)
+mesh = SubResource("SphereMesh_2bok1")
+
+[editable path="Player"]
