@@ -9,6 +9,15 @@
 
 [node name="Player" parent="." unique_id=267013903 instance=ExtResource("2_2p2iw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.0070066, 2)
+visible = false
+
+[node name="MoveComponent" parent="Player" index="2" unique_id=1492418364]
+hop_up = 3.0
+hop_forward = 4.0
+gravity_strength = 15.0
+
+[node name="Camara" parent="Player" index="3" unique_id=1344035474 node_paths=PackedStringArray("actor")]
+actor = NodePath("..")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1163069987]
 transform = Transform3D(1, 0, 0, 0, 0.46723664, 0.8841323, 0, -0.8841323, 0.46723664, 0, 2, 3.2848163)
@@ -21,7 +30,7 @@ light_indirect_energy = 2.561
 use_collision = true
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Piso/CSGCombiner3D" unique_id=151053052]
-size = Vector3(82.255, 0.28, 124.94)
+size = Vector3(200, 0.28, 200)
 material = ExtResource("2_ixlnu")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1747187710]

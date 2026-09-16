@@ -10,6 +10,9 @@ material = ExtResource("1_4flbx")
 [sub_resource type="BoxShape3D" id="BoxShape3D_adgpb"]
 size = Vector3(1, 0.39, 1)
 
+[sub_resource type="BoxMesh" id="BoxMesh_adgpb"]
+size = Vector3(0.1, 0.125, 0.1)
+
 [node name="Player" type="CharacterBody3D" unique_id=267013903]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=186417616]
@@ -30,3 +33,15 @@ script = ExtResource("3_qhqgy")
 
 [node name="Camera3D" type="Camera3D" parent="Camara" unique_id=152284541]
 transform = Transform3D(1, 0, 0, 0, 0.988084, 0.15391545, 0, -0.15391545, 0.988084, 0, 0.54356015, 1.2952521)
+
+[node name="Ojo" type="MeshInstance3D" parent="." unique_id=523308191]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32130063, 0.20143318, -0.40897453)
+mesh = SubResource("BoxMesh_adgpb")
+
+[node name="Ojo2" type="MeshInstance3D" parent="." unique_id=107617816]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.30850488, 0.20143318, -0.40897453)
+mesh = SubResource("BoxMesh_adgpb")
+
+[node name="Ojo3" type="MeshInstance3D" parent="." unique_id=394915875]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.009514868, 0.048872232, -0.5409478)
+mesh = SubResource("BoxMesh_adgpb")

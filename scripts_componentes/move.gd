@@ -3,77 +3,92 @@ class_name MoveComponent
 
 @export var actor: CharacterBody3D
 
-@export_category("Fuerzas Mínimas (Toque rápido)")
-@export var min_hop_up := 6.0
-@export var min_hop_forward := 8.0
+@export_category("Fuerza del Salto")
+@export var hop_up := 6.0
+@export var hop_forward := 8.0
+@export var rotation_speed := 4.0
+@export var max_charge := 1.0
+@export var gravity_strength := 18.0
+@export var ground_check_distance := 0.2
 
-@export_category("Fuerzas Máximas (Carga 100%)")
-@export var max_hop_up := 15.0
-@export var max_hop_forward := 25.0
-
-@export_category("Ajustes de Carga y Giro")
-@export var max_charge_time := 1.2
-@export var rotation_speed := 3.0
-
-var gravity: float = 8.0
-
-var current_charge := 0.0
-var is_charging := false
-var jump_cooldown := 0.0 # Temporizador de bloqueo entre saltos
+var velocity := Vector3.ZERO
+var charge_time := 0.0
+var charging := false
+var jumped := false
 
 func _ready() -> void:
 	if not actor and get_parent() is CharacterBody3D:
 		actor = get_parent() as CharacterBody3D
+	# Si preferís que el actor procese su propia física, comentá la siguiente línea.
+	# actor.set_physics_process(false)
 
 func _physics_process(delta: float) -> void:
 	if not actor:
 		return
 
-	# Reducir el tiempo de enfriamiento si está activo
-	if jump_cooldown > 0.0:
-		jump_cooldown -= delta
+	# ROTACIÓN (solo cuando estamos "grounded")
+	if _is_grounded():
+		var rot_dir := Input.get_axis("ui_right", "ui_left")
+		if rot_dir != 0:
+			actor.rotate_y(rot_dir * rotation_speed * delta)
+		actor.velocity.x = 0
+		actor.velocity.z = 0
 
-	# 1. Gravedad y limpieza en el aire
-	if not actor.is_on_floor():
-		actor.velocity.y -= gravity * delta
-		is_charging = false
-		current_charge = 0.0
+	# CARGA: solo se puede iniciar si estamos en suelo y no hemos saltado
+	if _is_grounded() and not jumped:
+		if Input.is_action_pressed("ui_accept"):
+			if not charging:
+				charging = true
+				charge_time = 0.0
+			charge_time = min(charge_time + delta, max_charge)
+		if Input.is_action_just_released("ui_accept") and charging:
+			_perform_jump()
 	else:
-		# Frenar deslizamiento horizontal en piso
-		actor.velocity.x = move_toward(actor.velocity.x, 0.0, 15.0 * delta)
-		actor.velocity.z = move_toward(actor.velocity.z, 0.0, 15.0 * delta)
+		# Si estamos en el aire y se intentó cargar, cancelamos la carga
+		if charging:
+			charging = false
+	
 
-		# 2. Rotación en tierra
-		var rot_dir := 0.0
-		if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
-			rot_dir += 1.0
-		if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
-			rot_dir -= 1.0
+	# INTEGRACIÓN MANUAL DE GRAVEDAD (si no estamos en suelo)
+	if not _is_grounded():
+		velocity.y -= gravity_strength * delta
 
-		actor.rotate_y(rot_dir * rotation_speed * delta)
+	# MOVIMIENTO MANUAL con detección de colisión
+	var motion := velocity * delta
+	var collision = actor.move_and_collide(motion)
+	if collision:
+		var n := collision.get_normal()
+		if n.dot(Vector3.UP) > 0.7:
+			# Colisionamos con suelo: congelamos velocidad y marcamos aterrizaje
+			velocity = Vector3.ZERO
+			charging = false
+			charge_time = 0.0
+			jumped = false
+		else:
+			# Colisión lateral/techo: anulamos componente en la normal
+			velocity = velocity.slide(n)
 
-		# 3. Lógica de Carga y Salto (solo si finalizó el cooldown)
-		if jump_cooldown <= 0.0:
-			if Input.is_key_pressed(KEY_SPACE):
-				is_charging = true
-				current_charge += delta / max_charge_time
-				current_charge = clamp(current_charge, 0.0, 1.0)
-			elif is_charging:
-				_execute_charged_hop()
-
-	actor.move_and_slide()
-
-func _execute_charged_hop() -> void:
+func _perform_jump() -> void:
 	var forward_dir = -actor.transform.basis.z.normalized()
+	var multiplier = 1.0 + charge_time
+	velocity.y = hop_up * multiplier
+	velocity.x = forward_dir.x * hop_forward * multiplier
+	velocity.z = forward_dir.z * hop_forward * multiplier
+	charging = false
+	charge_time = 0.0
+	jumped = true
+
+func _is_grounded() -> bool:
+	if not actor or not is_inside_tree():
+		return false
+		
+	var space_state = actor.get_world_3d().direct_space_state
+	var from = actor.global_transform.origin
+	var to = from + Vector3.DOWN * (ground_check_distance + 0.01)
 	
-	var actual_up = lerp(min_hop_up, max_hop_up, current_charge)
-	var actual_forward = lerp(min_hop_forward, max_hop_forward, current_charge)
+	# Creamos la consulta de raycast propia de Godot 4
+	var query = PhysicsRayQueryParameters3D.create(from, to)
+	query.exclude = [actor.get_rid()] # Excluimos el RID de la rana para que no se choque a sí misma
 	
-	actor.velocity.y = actual_up
-	actor.velocity.x = forward_dir.x * actual_forward
-	actor.velocity.z = forward_dir.z * actual_forward
-	
-	# Reiniciar carga y activar cooldown para bloquear saltos fantasma
-	is_charging = false
-	current_charge = 0.0
-	jump_cooldown = 0.25
+	var result = space_state.intersect_ray(query)
+	return not result.is_empty()
