@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://lpbq1v7tot6c"]
+
+[ext_resource type="Texture2D" uid="uid://ypgq5i6gujmw" path="res://assets/kenney_prototype-textures/PNG/Purple/texture_01.png" id="1_nghqc"]
+[ext_resource type="Script" uid="uid://ca38x20jmrmvj" path="res://moneda.gd" id="1_r4iok"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_2bok1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r4iok"]
+albedo_texture = ExtResource("1_nghqc")
+
+[sub_resource type="SphereMesh" id="SphereMesh_2bok1"]
+
+[node name="moneda" type="Area3D" unique_id=1060076567]
+script = ExtResource("1_r4iok")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=247064233]
+shape = SubResource("SphereShape3D_2bok1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=669659220]
+material_override = SubResource("StandardMaterial3D_r4iok")
+mesh = SubResource("SphereMesh_2bok1")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]

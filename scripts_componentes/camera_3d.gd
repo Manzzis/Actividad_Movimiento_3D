@@ -1,74 +1,38 @@
-extends Node
-class_name FrogMovementComponent
+extends Node3D
+class_name CamaraControl
 
-@export var actor: CharacterBody3D
+@onready var Camara = $Camera3D
+@export_range(0.001, 0.01) var sensibilidad: float = 0.003
+@export var min_pitch: float = -85.0 # Límite para mirar hacia abajo
+@export var max_pitch: float = 85.0  # Límite para mirar hacia arriba
 
-@export_category("Fuerzas Mínimas (Toque rápido)")
-@export var min_hop_up := 6.0
-@export var min_hop_forward := 8.0
-
-@export_category("Fuerzas Máximas (Carga 100%)")
-@export var max_hop_up := 15.0
-@export var max_hop_forward := 25.0
-
-@export_category("Ajustes de Carga y Giro")
-@export var max_charge_time := 1.2 # Segundos para llegar al salto máximo
-@export var rotation_speed := 3.0
-
-var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
-
-var current_charge := 0.0
-var is_charging := false
+var pitch: float = 0.0
+var yaw: float = 0.0
 
 func _ready() -> void:
-	if not actor and get_parent() is CharacterBody3D:
-		actor = get_parent() as CharacterBody3D
+	# Oculta y fija el cursor al centro de la pantalla al comenzar
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
-func _physics_process(delta: float) -> void:
-	if not actor:
-		return
+func _unhandled_input(event: InputEvent) -> void:
+	# 1. Alternar captura/liberación del mouse con la tecla ESC
+	if event.is_action_pressed("ui_cancel"):
+		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		else:
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
-	# 1. Gravedad
-	if not actor.is_on_floor():
-		actor.velocity.y -= gravity * delta
-	else:
-		# Frenar fricción al estar en tierra
-		actor.velocity.x = move_toward(actor.velocity.x, 0.0, 15.0 * delta)
-		actor.velocity.z = move_toward(actor.velocity.z, 0.0, 15.0 * delta)
+	# 2. Rotación con el movimiento del mouse (solo si el cursor está capturado)
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		yaw -= event.relative.x * sensibilidad
+		pitch -= event.relative.y * sensibilidad
+		pitch = clamp(pitch, deg_to_rad(min_pitch), deg_to_rad(max_pitch))
 
-		# 2. Rotación en tierra (Permite apuntar mientras carga el salto)
-		var rot_dir := 0.0
-		if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
-			rot_dir += 1.0
-		if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
-			rot_dir -= 1.0
-
-		actor.rotate_y(rot_dir * rotation_speed * delta)
-
-		# 3. Lógica de Carga del Salto
-		if Input.is_key_pressed(KEY_SPACE):
-			is_charging = true
-			current_charge += delta / max_charge_time
-			current_charge = clamp(current_charge, 0.0, 1.0)
-		elif is_charging:
-			# Se soltó la tecla Espacio
-			_execute_charged_hop()
-
-	actor.move_and_slide()
-
-func _execute_charged_hop() -> void:
-	var forward_dir = -actor.transform.basis.z.normalized()
-	
-	# Interpolamos la fuerza según el porcentaje de carga (0.0 a 1.0)
-	var actual_up = lerp(min_hop_up, max_hop_up, current_charge)
-	var actual_forward = lerp(min_hop_forward, max_hop_forward, current_charge)
-	
-	actor.velocity.y = actual_up
-	actor.velocity.x = forward_dir.x * actual_forward
-	actor.velocity.z = forward_dir.z * actual_forward
-	
-	print("--> Salto disparado al ", int(current_charge * 100), "% de fuerza <--")
-	
-	# Reiniciar variables de estado
-	is_charging = false
-	current_charge = 0.0
+		# Si la cámara es independiente o de primera persona:
+		rotation.x = pitch
+		
+		# Opción A: Rotar horizontalmente la cámara misma (Primera persona / Libre)
+		rotation.y = yaw
+		
+		# Opción B: Si la cámara está dentro del personaje y quieres rotar el cuerpo entero, 
+		# comenta 'rotation.y = yaw' arriba y descomenta esta línea:
+		# get_parent().rotation.y = yaw

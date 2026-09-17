@@ -3,6 +3,7 @@
 [ext_resource type="Material" uid="uid://cacfjr85euepj" path="res://assets/materials/player_m.tres" id="1_4flbx"]
 [ext_resource type="Script" uid="uid://c733fsadak68v" path="res://scripts_componentes/move.gd" id="2_onrkg"]
 [ext_resource type="Script" uid="uid://d26tnv35t26ws" path="res://scripts_componentes/camera_3d.gd" id="3_qhqgy"]
+[ext_resource type="Texture2D" uid="uid://c4iyw66t88lq5" path="res://assets/kenney_prototype-textures/PNG/Dark/texture_07.png" id="4_dqkch"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_2bok1"]
 material = ExtResource("1_4flbx")
@@ -10,10 +11,14 @@ material = ExtResource("1_4flbx")
 [sub_resource type="BoxShape3D" id="BoxShape3D_adgpb"]
 size = Vector3(1, 0.39, 1)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qlg0r"]
+albedo_texture = ExtResource("4_dqkch")
+
 [sub_resource type="BoxMesh" id="BoxMesh_adgpb"]
+material = SubResource("StandardMaterial3D_qlg0r")
 size = Vector3(0.1, 0.125, 0.1)
 
-[node name="Player" type="CharacterBody3D" unique_id=267013903]
+[node name="Player" type="CharacterBody3D" unique_id=267013903 groups=["Jugador"]]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=186417616]
 transform = Transform3D(1, 0, 0, 0, 0.35283372, 0, 0, 0, 1, 0, 0, 0)
